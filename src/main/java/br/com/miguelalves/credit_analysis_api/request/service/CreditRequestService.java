@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.miguelalves.credit_analysis_api.company.domain.Company;
 import br.com.miguelalves.credit_analysis_api.company.service.CompanyService;
+import br.com.miguelalves.credit_analysis_api.company.service.CompanyValidationService;
 import br.com.miguelalves.credit_analysis_api.request.domain.CreditRequest;
 import br.com.miguelalves.credit_analysis_api.request.dto.CreateCreditRequestRequest;
 import br.com.miguelalves.credit_analysis_api.request.dto.CreditRequestResponse;
@@ -21,12 +22,14 @@ public class CreditRequestService {
 
     private final CompanyService companyService;
     private final CreditRequestRepository creditRequestRepository;
+    private final CompanyValidationService companyValidationService;
 
     @Transactional
     public CreditRequestResponse createCreditRequest(CreateCreditRequestRequest request) {
         Company company = companyService.findCompanyById(request.companyId());
+        Company validatedCompany = companyValidationService.validateCompany(company);
         CreditRequest creditRequest = CreditRequest.create(
-                company,
+                validatedCompany,
                 request.requestedAmount(),
                 request.annualRevenue());
         CreditRequest savedCreditRequest = creditRequestRepository.save(creditRequest);

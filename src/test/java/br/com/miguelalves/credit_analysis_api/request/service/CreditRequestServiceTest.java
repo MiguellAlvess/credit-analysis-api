@@ -14,12 +14,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import br.com.miguelalves.credit_analysis_api.company.domain.Company;
 import br.com.miguelalves.credit_analysis_api.company.service.CompanyService;
+import br.com.miguelalves.credit_analysis_api.company.service.CompanyValidationService;
 import static br.com.miguelalves.credit_analysis_api.request.common.CreditRequestConstants.COMPANY_ID;
 import static br.com.miguelalves.credit_analysis_api.request.common.CreditRequestConstants.CREATE_CREDIT_REQUEST_REQUEST;
 import static br.com.miguelalves.credit_analysis_api.request.common.CreditRequestConstants.CREDIT_REQUEST_ID;
 import static br.com.miguelalves.credit_analysis_api.request.common.CreditRequestConstants.createCompany;
 import static br.com.miguelalves.credit_analysis_api.request.common.CreditRequestConstants.createCreditRequest;
 import br.com.miguelalves.credit_analysis_api.request.domain.CreditRequest;
+import br.com.miguelalves.credit_analysis_api.request.domain.CreditRequestStatus;
 import br.com.miguelalves.credit_analysis_api.request.dto.CreditRequestResponse;
 import br.com.miguelalves.credit_analysis_api.request.repository.CreditRequestRepository;
 import br.com.miguelalves.credit_analysis_api.shared.exception.validation.ResourceNotFoundException;
@@ -34,32 +36,33 @@ class CreditRequestServiceTest {
         private CompanyService companyService;
 
         @Mock
+        private CompanyValidationService companyValidationService;
+
+        @Mock
         private CreditRequestRepository creditRequestRepository;
 
         @Test
         void shouldCreateCreditRequestWithValidData() {
                 Company company = createCompany();
-                CreditRequest creditRequest = CreditRequest.create(
-                                company,
-                                CREATE_CREDIT_REQUEST_REQUEST.requestedAmount(),
-                                CREATE_CREDIT_REQUEST_REQUEST.annualRevenue());
-                when(companyService.findCompanyById(COMPANY_ID))
+                when(companyService.findCompanyById(CREATE_CREDIT_REQUEST_REQUEST.companyId()))
+                                .thenReturn(company);
+                when(companyValidationService.validateCompany(company))
                                 .thenReturn(company);
                 when(creditRequestRepository.save(any(CreditRequest.class)))
-                                .thenReturn(creditRequest);
+                                .thenAnswer(invocation -> invocation.getArgument(0));
 
                 CreditRequestResponse response = creditRequestService
                                 .createCreditRequest(CREATE_CREDIT_REQUEST_REQUEST);
 
                 assertThat(response).isNotNull();
-                assertThat(response.companyId()).isEqualTo(company.getId());
-                assertThat(response.companyName()).isEqualTo(company.getName());
-                assertThat(response.cnpj()).isEqualTo(company.getCnpj());
+                assertThat(response.companyId())
+                                .isEqualTo(CREATE_CREDIT_REQUEST_REQUEST.companyId());
                 assertThat(response.requestedAmount())
-                                .isEqualByComparingTo(CREATE_CREDIT_REQUEST_REQUEST.requestedAmount());
+                                .isEqualTo(CREATE_CREDIT_REQUEST_REQUEST.requestedAmount());
                 assertThat(response.annualRevenue())
-                                .isEqualByComparingTo(CREATE_CREDIT_REQUEST_REQUEST.annualRevenue());
-                assertThat(response.status()).isEqualTo(creditRequest.getStatus());
+                                .isEqualTo(CREATE_CREDIT_REQUEST_REQUEST.annualRevenue());
+                assertThat(response.status())
+                                .isEqualTo(CreditRequestStatus.PENDING);
         }
 
         @Test

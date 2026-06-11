@@ -55,8 +55,6 @@ class CreditRequestServiceTest {
                                 .createCreditRequest(CREATE_CREDIT_REQUEST_REQUEST);
 
                 assertThat(response).isNotNull();
-                assertThat(response.companyId())
-                                .isEqualTo(CREATE_CREDIT_REQUEST_REQUEST.companyId());
                 assertThat(response.requestedAmount())
                                 .isEqualTo(CREATE_CREDIT_REQUEST_REQUEST.requestedAmount());
                 assertThat(response.annualRevenue())

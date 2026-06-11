@@ -1,5 +1,6 @@
 package br.com.miguelalves.credit_analysis_api.shared.exception.handler;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,8 +15,11 @@ import jakarta.validation.ValidationException;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Void> handleResourceNotFoundException() {
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<String> handleResourceNotFoundException(
+            ResourceNotFoundException exception) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(exception.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

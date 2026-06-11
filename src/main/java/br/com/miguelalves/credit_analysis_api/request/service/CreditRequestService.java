@@ -1,5 +1,7 @@
 package br.com.miguelalves.credit_analysis_api.request.service;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,14 +12,21 @@ import br.com.miguelalves.credit_analysis_api.request.dto.CreateCreditRequestReq
 import br.com.miguelalves.credit_analysis_api.request.dto.CreditRequestResponse;
 import br.com.miguelalves.credit_analysis_api.request.mapper.CreditRequestMapper;
 import br.com.miguelalves.credit_analysis_api.request.repository.CreditRequestRepository;
+import br.com.miguelalves.credit_analysis_api.shared.exception.validation.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class CreditRequestCreationService {
+public class CreditRequestService {
 
     private final CompanyRepository companyRepository;
     private final CreditRequestRepository creditRequestRepository;
+
+    public CreditRequestResponse getCreditRequestById(UUID id) {
+        CreditRequest creditRequest = creditRequestRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Credit request not found"));
+        return CreditRequestMapper.fromCreditRequestToResponse(creditRequest);
+    }
 
     @Transactional
     public CreditRequestResponse createCreditRequest(CreateCreditRequestRequest request) {
@@ -32,11 +41,11 @@ public class CreditRequestCreationService {
 
     private Company findOrCreateCompany(CreateCreditRequestRequest request) {
         return companyRepository.findByCnpj(request.cnpj())
-                .map(company -> updateCompanyRegistrationData(company, request))
+                .map(company -> updateCompany(company, request))
                 .orElseGet(() -> createCompany(request));
     }
 
-    private Company updateCompanyRegistrationData(
+    private Company updateCompany(
             Company company,
             CreateCreditRequestRequest request) {
         company.updateRegistrationData(

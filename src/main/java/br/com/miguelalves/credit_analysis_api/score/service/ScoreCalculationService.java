@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import org.springframework.stereotype.Service;
 
 import br.com.miguelalves.credit_analysis_api.company.domain.Company;
-import br.com.miguelalves.credit_analysis_api.request.domain.CreditRequest;
 import br.com.miguelalves.credit_analysis_api.score.domain.RiskLevel;
 import br.com.miguelalves.credit_analysis_api.shared.exception.validation.BusinessException;
 
@@ -17,7 +16,7 @@ public class ScoreCalculationService {
     private static final int HIGH_ANNUAL_REVENUE_POINTS = 400;
     private static final BigDecimal HIGH_ANNUAL_REVENUE_THRESHOLD = new BigDecimal("1000000.00");
 
-    public int calculate(Company company, CreditRequest creditRequest) {
+    public int calculate(Company company, BigDecimal annualRevenue) {
         int score = 0;
         if (company.isActive()) {
             score += ACTIVE_COMPANY_POINTS;
@@ -25,7 +24,7 @@ public class ScoreCalculationService {
         if (company.hasMoreThanFiveYearsOfOperation()) {
             score += MORE_THAN_FIVE_YEARS_POINTS;
         }
-        if (creditRequest.getAnnualRevenue().compareTo(HIGH_ANNUAL_REVENUE_THRESHOLD) > 0) {
+        if (annualRevenue.compareTo(HIGH_ANNUAL_REVENUE_THRESHOLD) > 0) {
             score += HIGH_ANNUAL_REVENUE_POINTS;
         }
         return score;

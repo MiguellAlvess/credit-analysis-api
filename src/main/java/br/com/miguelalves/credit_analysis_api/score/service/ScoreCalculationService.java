@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 
 import br.com.miguelalves.credit_analysis_api.company.domain.Company;
 import br.com.miguelalves.credit_analysis_api.request.domain.CreditRequest;
+import br.com.miguelalves.credit_analysis_api.score.domain.RiskLevel;
+import br.com.miguelalves.credit_analysis_api.shared.exception.validation.BusinessException;
 
 @Service
 public class ScoreCalculationService {
@@ -27,5 +29,18 @@ public class ScoreCalculationService {
             score += HIGH_ANNUAL_REVENUE_POINTS;
         }
         return score;
+    }
+
+    public RiskLevel classifyRiskLevel(int score) {
+        if (score < 0 || score > 1000) {
+            throw new BusinessException("Score must be between 0 and 1000");
+        }
+        if (score <= 399) {
+            return RiskLevel.HIGH;
+        }
+        if (score <= 699) {
+            return RiskLevel.MEDIUM;
+        }
+        return RiskLevel.LOW;
     }
 }

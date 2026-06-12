@@ -24,6 +24,8 @@ import br.com.miguelalves.credit_analysis_api.request.domain.CreditRequest;
 import br.com.miguelalves.credit_analysis_api.request.domain.CreditRequestStatus;
 import br.com.miguelalves.credit_analysis_api.request.dto.CreditRequestResponse;
 import br.com.miguelalves.credit_analysis_api.request.repository.CreditRequestRepository;
+import br.com.miguelalves.credit_analysis_api.score.domain.RiskLevel;
+import br.com.miguelalves.credit_analysis_api.score.service.ScoreCalculationService;
 import br.com.miguelalves.credit_analysis_api.shared.exception.validation.ResourceNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,18 +41,25 @@ class CreditRequestServiceTest {
         private CompanyValidationService companyValidationService;
 
         @Mock
+        private ScoreCalculationService scoreCalculationService;
+
+        @Mock
         private CreditRequestRepository creditRequestRepository;
 
         @Test
         void shouldCreateCreditRequestWithValidData() {
                 Company company = createCompany();
+
                 when(companyService.findCompanyById(CREATE_CREDIT_REQUEST_REQUEST.companyId()))
                                 .thenReturn(company);
                 when(companyValidationService.validateCompany(company))
                                 .thenReturn(company);
+                when(scoreCalculationService.calculate(company, CREATE_CREDIT_REQUEST_REQUEST.annualRevenue()))
+                                .thenReturn(600);
+                when(scoreCalculationService.classifyRiskLevel(600))
+                                .thenReturn(RiskLevel.MEDIUM);
                 when(creditRequestRepository.save(any(CreditRequest.class)))
                                 .thenAnswer(invocation -> invocation.getArgument(0));
-
                 CreditRequestResponse response = creditRequestService
                                 .createCreditRequest(CREATE_CREDIT_REQUEST_REQUEST);
 
@@ -59,6 +68,8 @@ class CreditRequestServiceTest {
                                 .isEqualTo(CREATE_CREDIT_REQUEST_REQUEST.requestedAmount());
                 assertThat(response.annualRevenue())
                                 .isEqualTo(CREATE_CREDIT_REQUEST_REQUEST.annualRevenue());
+                assertThat(response.score()).isEqualTo(600);
+                assertThat(response.riskLevel()).isEqualTo(RiskLevel.MEDIUM);
                 assertThat(response.status())
                                 .isEqualTo(CreditRequestStatus.PENDING);
         }

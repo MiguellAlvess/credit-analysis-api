@@ -8,7 +8,12 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.miguelalves.credit_analysis_api.company.domain.Company;
 import br.com.miguelalves.credit_analysis_api.company.service.CompanyService;
 import br.com.miguelalves.credit_analysis_api.company.service.CompanyValidationService;
+import br.com.miguelalves.credit_analysis_api.decision.domain.CreditDecision;
+import br.com.miguelalves.credit_analysis_api.decision.repository.CreditDecisionRepository;
+import br.com.miguelalves.credit_analysis_api.decision.service.CreditDecisionService;
+import br.com.miguelalves.credit_analysis_api.policy.service.CreditPolicyService;
 import br.com.miguelalves.credit_analysis_api.request.domain.CreditRequest;
+import br.com.miguelalves.credit_analysis_api.request.domain.CreditRequestStatus;
 import br.com.miguelalves.credit_analysis_api.request.dto.CreateCreditRequestRequest;
 import br.com.miguelalves.credit_analysis_api.request.dto.CreditRequestResponse;
 import br.com.miguelalves.credit_analysis_api.request.mapper.CreditRequestMapper;
@@ -26,6 +31,9 @@ public class CreditRequestService {
     private final CreditRequestRepository creditRequestRepository;
     private final CompanyValidationService companyValidationService;
     private final ScoreCalculationService scoreCalculationService;
+    private final CreditPolicyService creditPolicyService;
+    private final CreditDecisionService creditDecisionService;
+    private final CreditDecisionRepository creditDecisionRepository;
 
     @Transactional
     public CreditRequestResponse createCreditRequest(CreateCreditRequestRequest request) {
@@ -35,10 +43,17 @@ public class CreditRequestService {
                 validatedCompany,
                 request.requestedAmount(),
                 request.annualRevenue());
-        int score = scoreCalculationService.calculate(validatedCompany, creditRequest.getAnnualRevenue());
+        int score = scoreCalculationService.calculate(
+                validatedCompany,
+                creditRequest.getAnnualRevenue());
         RiskLevel riskLevel = scoreCalculationService.classifyRiskLevel(score);
         creditRequest.registerScore(score, riskLevel);
+        CreditRequestStatus evaluatedStatus = creditPolicyService.evaluate(creditRequest);
+        CreditDecision creditDecision = creditDecisionService.makeDecision(
+                creditRequest,
+                evaluatedStatus);
         CreditRequest savedCreditRequest = creditRequestRepository.save(creditRequest);
+        creditDecisionRepository.save(creditDecision);
         return CreditRequestMapper.fromCreditRequestToResponse(savedCreditRequest);
     }
 

@@ -13,6 +13,8 @@ import br.com.miguelalves.credit_analysis_api.request.dto.CreateCreditRequestReq
 import br.com.miguelalves.credit_analysis_api.request.dto.CreditRequestResponse;
 import br.com.miguelalves.credit_analysis_api.request.mapper.CreditRequestMapper;
 import br.com.miguelalves.credit_analysis_api.request.repository.CreditRequestRepository;
+import br.com.miguelalves.credit_analysis_api.score.domain.RiskLevel;
+import br.com.miguelalves.credit_analysis_api.score.service.ScoreCalculationService;
 import br.com.miguelalves.credit_analysis_api.shared.exception.validation.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +25,7 @@ public class CreditRequestService {
     private final CompanyService companyService;
     private final CreditRequestRepository creditRequestRepository;
     private final CompanyValidationService companyValidationService;
+    private final ScoreCalculationService scoreCalculationService;
 
     @Transactional
     public CreditRequestResponse createCreditRequest(CreateCreditRequestRequest request) {
@@ -32,6 +35,9 @@ public class CreditRequestService {
                 validatedCompany,
                 request.requestedAmount(),
                 request.annualRevenue());
+        int score = scoreCalculationService.calculate(validatedCompany, creditRequest.getAnnualRevenue());
+        RiskLevel riskLevel = scoreCalculationService.classifyRiskLevel(score);
+        creditRequest.registerScore(score, riskLevel);
         CreditRequest savedCreditRequest = creditRequestRepository.save(creditRequest);
         return CreditRequestMapper.fromCreditRequestToResponse(savedCreditRequest);
     }

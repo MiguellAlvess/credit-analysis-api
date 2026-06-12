@@ -15,6 +15,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import br.com.miguelalves.credit_analysis_api.company.domain.Company;
 import br.com.miguelalves.credit_analysis_api.company.service.CompanyService;
 import br.com.miguelalves.credit_analysis_api.company.service.CompanyValidationService;
+import br.com.miguelalves.credit_analysis_api.decision.domain.CreditDecision;
+import br.com.miguelalves.credit_analysis_api.decision.repository.CreditDecisionRepository;
+import br.com.miguelalves.credit_analysis_api.decision.service.CreditDecisionService;
+import br.com.miguelalves.credit_analysis_api.policy.service.CreditPolicyService;
 import static br.com.miguelalves.credit_analysis_api.request.common.CreditRequestConstants.COMPANY_ID;
 import static br.com.miguelalves.credit_analysis_api.request.common.CreditRequestConstants.CREATE_CREDIT_REQUEST_REQUEST;
 import static br.com.miguelalves.credit_analysis_api.request.common.CreditRequestConstants.CREDIT_REQUEST_ID;
@@ -44,6 +48,15 @@ class CreditRequestServiceTest {
         private ScoreCalculationService scoreCalculationService;
 
         @Mock
+        private CreditPolicyService creditPolicyService;
+
+        @Mock
+        private CreditDecisionService creditDecisionService;
+
+        @Mock
+        private CreditDecisionRepository creditDecisionRepository;
+
+        @Mock
         private CreditRequestRepository creditRequestRepository;
 
         @Test
@@ -52,13 +65,34 @@ class CreditRequestServiceTest {
 
                 when(companyService.findCompanyById(CREATE_CREDIT_REQUEST_REQUEST.companyId()))
                                 .thenReturn(company);
+
                 when(companyValidationService.validateCompany(company))
                                 .thenReturn(company);
                 when(scoreCalculationService.calculate(company, CREATE_CREDIT_REQUEST_REQUEST.annualRevenue()))
                                 .thenReturn(600);
                 when(scoreCalculationService.classifyRiskLevel(600))
                                 .thenReturn(RiskLevel.MEDIUM);
+                when(creditPolicyService.evaluate(any(CreditRequest.class)))
+                                .thenReturn(CreditRequestStatus.MANUAL_REVIEW);
+                when(creditDecisionService.makeDecision(
+                                any(CreditRequest.class),
+                                any(CreditRequestStatus.class)))
+                                .thenAnswer(invocation -> {
+                                        CreditRequest creditRequest = invocation.getArgument(0);
+                                        CreditRequestStatus status = invocation.getArgument(1);
+
+                                        if (CreditRequestStatus.MANUAL_REVIEW.equals(status)) {
+                                                creditRequest.sendToManualReview();
+                                                return CreditDecision.manualReview(
+                                                                creditRequest,
+                                                                "Manual review required");
+                                        }
+                                        return null;
+                                });
+
                 when(creditRequestRepository.save(any(CreditRequest.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
+                when(creditDecisionRepository.save(any(CreditDecision.class)))
                                 .thenAnswer(invocation -> invocation.getArgument(0));
                 CreditRequestResponse response = creditRequestService
                                 .createCreditRequest(CREATE_CREDIT_REQUEST_REQUEST);
@@ -71,7 +105,7 @@ class CreditRequestServiceTest {
                 assertThat(response.score()).isEqualTo(600);
                 assertThat(response.riskLevel()).isEqualTo(RiskLevel.MEDIUM);
                 assertThat(response.status())
-                                .isEqualTo(CreditRequestStatus.PENDING);
+                                .isEqualTo(CreditRequestStatus.MANUAL_REVIEW);
         }
 
         @Test

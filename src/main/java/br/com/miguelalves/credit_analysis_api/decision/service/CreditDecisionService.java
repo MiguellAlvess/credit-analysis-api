@@ -9,6 +9,7 @@ import br.com.miguelalves.credit_analysis_api.decision.domain.CreditDecision;
 import br.com.miguelalves.credit_analysis_api.decision.dto.CreditDecisionResponse;
 import br.com.miguelalves.credit_analysis_api.decision.mapper.CreditDecisionMapper;
 import br.com.miguelalves.credit_analysis_api.decision.repository.CreditDecisionRepository;
+import br.com.miguelalves.credit_analysis_api.notification.service.NotificationService;
 import br.com.miguelalves.credit_analysis_api.request.domain.CreditRequest;
 import br.com.miguelalves.credit_analysis_api.request.domain.CreditRequestStatus;
 import br.com.miguelalves.credit_analysis_api.shared.exception.validation.BusinessException;
@@ -20,29 +21,41 @@ import lombok.RequiredArgsConstructor;
 public class CreditDecisionService {
 
     private final CreditDecisionRepository creditDecisionRepository;
+    private final NotificationService notificationService;
 
     public CreditDecision makeDecision(
             CreditRequest creditRequest,
             CreditRequestStatus status) {
         if (CreditRequestStatus.APPROVED.equals(status)) {
             creditRequest.approve();
-            return CreditDecision.approve(
+
+            CreditDecision decision = CreditDecision.approve(
                     creditRequest,
                     creditRequest.calculateMaximumAllowedAmount(),
                     "Credit approved");
+            notificationService.notifyDecision(decision);
+            return decision;
         }
+
         if (CreditRequestStatus.REJECTED.equals(status)) {
             creditRequest.reject();
-            return CreditDecision.reject(
+
+            CreditDecision decision = CreditDecision.reject(
                     creditRequest,
                     "Credit rejected");
+            notificationService.notifyDecision(decision);
+            return decision;
         }
+
         if (CreditRequestStatus.MANUAL_REVIEW.equals(status)) {
             creditRequest.sendToManualReview();
-            return CreditDecision.manualReview(
+            CreditDecision decision = CreditDecision.manualReview(
                     creditRequest,
                     "Manual review required");
+            notificationService.notifyDecision(decision);
+            return decision;
         }
+
         throw new BusinessException("Invalid credit request status");
     }
 

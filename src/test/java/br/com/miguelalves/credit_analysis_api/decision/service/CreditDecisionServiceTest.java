@@ -6,11 +6,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import br.com.miguelalves.credit_analysis_api.decision.domain.CreditDecision;
 import br.com.miguelalves.credit_analysis_api.decision.domain.CreditDecisionType;
+import br.com.miguelalves.credit_analysis_api.decision.repository.CreditDecisionRepository;
+import br.com.miguelalves.credit_analysis_api.notification.service.NotificationService;
 import static br.com.miguelalves.credit_analysis_api.policy.common.CreditPolicyConstants.createCreditRequestWithRiskLevel;
 import br.com.miguelalves.credit_analysis_api.request.domain.CreditRequest;
 import br.com.miguelalves.credit_analysis_api.request.domain.CreditRequestStatus;
@@ -20,80 +26,97 @@ import br.com.miguelalves.credit_analysis_api.shared.exception.validation.Busine
 @ExtendWith(MockitoExtension.class)
 class CreditDecisionServiceTest {
 
-    @InjectMocks
-    private CreditDecisionService creditDecisionService;
+        @InjectMocks
+        private CreditDecisionService creditDecisionService;
 
-    @Test
-    void shouldApproveCreditRequestAndCreateApprovedDecision() {
-        CreditRequest creditRequest = createCreditRequestWithRiskLevel(
-                RiskLevel.LOW,
-                new BigDecimal("200000.00"),
-                new BigDecimal("1000000.00"));
+        @Mock
+        private NotificationService notificationService;
 
-        CreditDecision decision = creditDecisionService.makeDecision(
-                creditRequest,
-                CreditRequestStatus.APPROVED);
+        @Mock
+        private CreditDecisionRepository creditDecisionRepository;
 
-        assertThat(creditRequest.isApproved()).isTrue();
-        assertThat(decision).isNotNull();
-        assertThat(decision.getCreditRequest()).isEqualTo(creditRequest);
-        assertThat(decision.getDecision()).isEqualTo(CreditDecisionType.APPROVED);
-        assertThat(decision.getApprovedAmount())
-                .isEqualByComparingTo(new BigDecimal("300000.00"));
-        assertThat(decision.getReason()).isEqualTo("Credit approved");
-        assertThat(decision.isApproved()).isTrue();
-    }
+        @Test
+        void shouldApproveCreditRequestAndCreateApprovedDecision() {
+                CreditRequest creditRequest = createCreditRequestWithRiskLevel(
+                                RiskLevel.LOW,
+                                new BigDecimal("200000.00"),
+                                new BigDecimal("1000000.00"));
 
-    @Test
-    void shouldRejectCreditRequestAndCreateRejectedDecision() {
-        CreditRequest creditRequest = createCreditRequestWithRiskLevel(
-                RiskLevel.HIGH,
-                new BigDecimal("100000.00"),
-                new BigDecimal("1000000.00"));
+                CreditDecision decision = creditDecisionService.makeDecision(
+                                creditRequest,
+                                CreditRequestStatus.APPROVED);
 
-        CreditDecision decision = creditDecisionService.makeDecision(
-                creditRequest,
-                CreditRequestStatus.REJECTED);
+                assertThat(creditRequest.isApproved()).isTrue();
+                assertThat(decision).isNotNull();
+                assertThat(decision.getCreditRequest()).isEqualTo(creditRequest);
+                assertThat(decision.getDecision()).isEqualTo(CreditDecisionType.APPROVED);
+                assertThat(decision.getApprovedAmount())
+                                .isEqualByComparingTo(new BigDecimal("300000.00"));
+                assertThat(decision.getReason()).isEqualTo("Credit approved");
+                assertThat(decision.isApproved()).isTrue();
 
-        assertThat(creditRequest.isRejected()).isTrue();
-        assertThat(decision).isNotNull();
-        assertThat(decision.getCreditRequest()).isEqualTo(creditRequest);
-        assertThat(decision.getDecision()).isEqualTo(CreditDecisionType.REJECTED);
-        assertThat(decision.getApprovedAmount())
-                .isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(decision.getReason()).isEqualTo("Credit rejected");
-        assertThat(decision.isRejected()).isTrue();
-    }
+                verify(notificationService).notifyDecision(decision);
+        }
 
-    @Test
-    void shouldSendCreditRequestToManualReviewAndCreateManualReviewDecision() {
-        CreditRequest creditRequest = createCreditRequestWithRiskLevel(
-                RiskLevel.MEDIUM,
-                new BigDecimal("100000.00"),
-                new BigDecimal("1000000.00"));
+        @Test
+        void shouldRejectCreditRequestAndCreateRejectedDecision() {
+                CreditRequest creditRequest = createCreditRequestWithRiskLevel(
+                                RiskLevel.HIGH,
+                                new BigDecimal("100000.00"),
+                                new BigDecimal("1000000.00"));
 
-        CreditDecision decision = creditDecisionService.makeDecision(
-                creditRequest,
-                CreditRequestStatus.MANUAL_REVIEW);
+                CreditDecision decision = creditDecisionService.makeDecision(
+                                creditRequest,
+                                CreditRequestStatus.REJECTED);
 
-        assertThat(creditRequest.isWaitingManualReview()).isTrue();
-        assertThat(decision).isNotNull();
-        assertThat(decision.getCreditRequest()).isEqualTo(creditRequest);
-        assertThat(decision.getDecision()).isEqualTo(CreditDecisionType.MANUAL_REVIEW);
-        assertThat(decision.getApprovedAmount())
-                .isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(decision.getReason()).isEqualTo("Manual review required");
-        assertThat(decision.isManualReview()).isTrue();
-    }
+                assertThat(creditRequest.isRejected()).isTrue();
+                assertThat(decision).isNotNull();
+                assertThat(decision.getCreditRequest()).isEqualTo(creditRequest);
+                assertThat(decision.getDecision()).isEqualTo(CreditDecisionType.REJECTED);
+                assertThat(decision.getApprovedAmount())
+                                .isEqualByComparingTo(BigDecimal.ZERO);
+                assertThat(decision.getReason()).isEqualTo("Credit rejected");
+                assertThat(decision.isRejected()).isTrue();
 
-    @Test
-    void shouldThrowBusinessExceptionWhenCreditRequestStatusIsInvalid() {
-        CreditRequest creditRequest = createCreditRequestWithRiskLevel(
-                RiskLevel.LOW,
-                new BigDecimal("200000.00"),
-                new BigDecimal("1000000.00"));
-        assertThatThrownBy(() -> creditDecisionService.makeDecision(creditRequest, CreditRequestStatus.PENDING))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage("Invalid credit request status");
-    }
+                verify(notificationService).notifyDecision(decision);
+        }
+
+        @Test
+        void shouldSendCreditRequestToManualReviewAndCreateManualReviewDecision() {
+                CreditRequest creditRequest = createCreditRequestWithRiskLevel(
+                                RiskLevel.MEDIUM,
+                                new BigDecimal("100000.00"),
+                                new BigDecimal("1000000.00"));
+
+                CreditDecision decision = creditDecisionService.makeDecision(
+                                creditRequest,
+                                CreditRequestStatus.MANUAL_REVIEW);
+
+                assertThat(creditRequest.isWaitingManualReview()).isTrue();
+                assertThat(decision).isNotNull();
+                assertThat(decision.getCreditRequest()).isEqualTo(creditRequest);
+                assertThat(decision.getDecision()).isEqualTo(CreditDecisionType.MANUAL_REVIEW);
+                assertThat(decision.getApprovedAmount())
+                                .isEqualByComparingTo(BigDecimal.ZERO);
+                assertThat(decision.getReason()).isEqualTo("Manual review required");
+                assertThat(decision.isManualReview()).isTrue();
+
+                verify(notificationService).notifyDecision(decision);
+        }
+
+        @Test
+        void shouldThrowBusinessExceptionWhenCreditRequestStatusIsInvalid() {
+                CreditRequest creditRequest = createCreditRequestWithRiskLevel(
+                                RiskLevel.LOW,
+                                new BigDecimal("200000.00"),
+                                new BigDecimal("1000000.00"));
+
+                assertThatThrownBy(() -> creditDecisionService.makeDecision(
+                                creditRequest,
+                                CreditRequestStatus.PENDING))
+                                .isInstanceOf(BusinessException.class)
+                                .hasMessage("Invalid credit request status");
+
+                verify(notificationService, never()).notifyDecision(any());
+        }
 }

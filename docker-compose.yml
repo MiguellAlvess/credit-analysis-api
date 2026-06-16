@@ -11,6 +11,18 @@ services:
     volumes:
       - credit-analysis-data:/var/lib/postgresql/data
 
+  postgres-test:
+    image: postgres:17
+    container_name: credit-analysis-postgres-test
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: credit_analysis_test
+    ports:
+      - "5433:5432"
+    volumes:
+      - credit-analysis-test-data:/var/lib/postgresql/data
+
   kafka:
     image: apache/kafka:3.7.0
     container_name: credit-analysis-kafka
@@ -29,3 +41,4 @@ services:
 
 volumes:
   credit-analysis-data:
+  credit-analysis-test-data:

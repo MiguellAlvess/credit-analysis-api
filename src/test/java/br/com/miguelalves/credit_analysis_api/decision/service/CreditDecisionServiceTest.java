@@ -6,17 +6,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import br.com.miguelalves.credit_analysis_api.decision.domain.CreditDecision;
 import br.com.miguelalves.credit_analysis_api.decision.domain.CreditDecisionType;
 import br.com.miguelalves.credit_analysis_api.decision.repository.CreditDecisionRepository;
-import br.com.miguelalves.credit_analysis_api.notification.service.NotificationService;
 import static br.com.miguelalves.credit_analysis_api.policy.common.CreditPolicyConstants.createCreditRequestWithRiskLevel;
 import br.com.miguelalves.credit_analysis_api.request.domain.CreditRequest;
 import br.com.miguelalves.credit_analysis_api.request.domain.CreditRequestStatus;
@@ -30,7 +26,7 @@ class CreditDecisionServiceTest {
         private CreditDecisionService creditDecisionService;
 
         @Mock
-        private NotificationService notificationService;
+        private CreditDecisionProducer creditDecisionProducer;
 
         @Mock
         private CreditDecisionRepository creditDecisionRepository;
@@ -54,8 +50,6 @@ class CreditDecisionServiceTest {
                                 .isEqualByComparingTo(new BigDecimal("300000.00"));
                 assertThat(decision.getReason()).isEqualTo("Credit approved");
                 assertThat(decision.isApproved()).isTrue();
-
-                verify(notificationService).notifyDecision(decision);
         }
 
         @Test
@@ -77,8 +71,6 @@ class CreditDecisionServiceTest {
                                 .isEqualByComparingTo(BigDecimal.ZERO);
                 assertThat(decision.getReason()).isEqualTo("Credit rejected");
                 assertThat(decision.isRejected()).isTrue();
-
-                verify(notificationService).notifyDecision(decision);
         }
 
         @Test
@@ -100,8 +92,6 @@ class CreditDecisionServiceTest {
                                 .isEqualByComparingTo(BigDecimal.ZERO);
                 assertThat(decision.getReason()).isEqualTo("Manual review required");
                 assertThat(decision.isManualReview()).isTrue();
-
-                verify(notificationService).notifyDecision(decision);
         }
 
         @Test
@@ -116,7 +106,5 @@ class CreditDecisionServiceTest {
                                 CreditRequestStatus.PENDING))
                                 .isInstanceOf(BusinessException.class)
                                 .hasMessage("Invalid credit request status");
-
-                verify(notificationService, never()).notifyDecision(any());
         }
 }

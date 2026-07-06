@@ -5,7 +5,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-import br.com.miguelalves.credit_analysis_api.decision.domain.CreditDecision;
+import br.com.miguelalves.credit_analysis_api.decision.dto.CreditDecisionEvent;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -20,16 +20,16 @@ public class NotificationService {
     @Value("${spring.mail.username}")
     private String senderEmail;
 
-    public void notifyDecision(CreditDecision decision) {
+    public void notifyDecision(CreditDecisionEvent event) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(senderEmail);
         message.setTo(recipientEmail);
         message.setSubject("Nova decisão de crédito gerada");
-        message.setText(buildMessage(decision));
+        message.setText(buildMessage(event));
         mailSender.send(message);
     }
 
-    private String buildMessage(CreditDecision decision) {
+    private String buildMessage(CreditDecisionEvent event) {
         return """
                 Nova decisão de crédito gerada.
 
@@ -40,11 +40,11 @@ public class NotificationService {
                 Motivo: %s
                 Data da decisão: %s
                 """.formatted(
-                decision.getCreditRequest().getCompany().getName(),
-                decision.getCreditRequest().getCompany().getCnpj(),
-                decision.getDecision(),
-                decision.getApprovedAmount(),
-                decision.getReason(),
-                decision.getDecidedAt());
+                event.companyName(),
+                event.cnpj(),
+                event.decision(),
+                event.approvedAmount(),
+                event.reason(),
+                event.decidedAt());
     }
 }

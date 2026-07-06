@@ -76,7 +76,6 @@ A mensageria é utilizada apenas para efeitos colaterais (envio de e-mail), evit
 - Avaliação das políticas de crédito
 - Aprovação automática
 - Rejeição automática
-- Encaminhamento para análise manual
 - Consulta da decisão de crédito
 - Publicação de eventos via Kafka
 - Envio assíncrono de e-mails

@@ -4,6 +4,12 @@ API para análise de crédito empresarial desenvolvida com **Java 21** e **Sprin
 
 O sistema realiza todo o fluxo de análise de crédito de uma empresa, desde a validação cadastral até a geração da decisão final, publicando eventos para envio assíncrono de notificações por e-mail.
 
+## Arquitetura Geral
+
+<img width="1158" height="627" alt="image" src="https://github.com/user-attachments/assets/b283c75c-63f6-451c-a367-e5db7e8fd9fb" />
+
+O fluxo principal da aplicação permanece síncrono, enquanto o envio de notificações é desacoplado utilizando Apache Kafka.
+
 ## Tecnologias
 
 - Java 21
@@ -20,49 +26,6 @@ O sistema realiza todo o fluxo de análise de crédito de uma empresa, desde a v
 - JUnit 5
 - Mockito
 - AssertJ
-
-## Arquitetura
-
-O projeto foi desenvolvido utilizando uma arquitetura modular baseada em domínio.
-
-```
-company
-decision
-integration
-notification
-policy
-request
-score
-
-```
-
-Fluxo principal:
-
-```
-Company
-      │
-      ▼
-Validation (BrasilAPI)
-      │
-      ▼
-Score Calculation
-      │
-      ▼
-Credit Policy
-      │
-      ▼
-Credit Decision
-      │
-      ▼
-Kafka Event
-      │
-      ▼
-Notification (Email)
-```
-
-Todo o fluxo de negócio permanece síncrono.
-
-A mensageria é utilizada apenas para efeitos colaterais (envio de e-mail), evitando acoplamento desnecessário entre os módulos.
 
 ## Funcionalidades
 

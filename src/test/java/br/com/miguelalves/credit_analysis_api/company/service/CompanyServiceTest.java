@@ -16,7 +16,10 @@ import static br.com.miguelalves.credit_analysis_api.company.common.CompanyConst
 import static br.com.miguelalves.credit_analysis_api.company.common.CompanyConstants.CREATE_COMPANY_REQUEST;
 import static br.com.miguelalves.credit_analysis_api.company.common.CompanyConstants.UPDATE_COMPANY_REQUEST;
 import static br.com.miguelalves.credit_analysis_api.company.common.CompanyConstants.createCompany;
+
+import br.com.miguelalves.credit_analysis_api.company.domain.Cnpj;
 import br.com.miguelalves.credit_analysis_api.company.domain.Company;
+
 import br.com.miguelalves.credit_analysis_api.company.dto.CompanyResponse;
 import br.com.miguelalves.credit_analysis_api.company.repository.CompanyRepository;
 import br.com.miguelalves.credit_analysis_api.shared.exception.validation.BusinessException;
@@ -25,90 +28,90 @@ import br.com.miguelalves.credit_analysis_api.shared.exception.validation.Resour
 @ExtendWith(MockitoExtension.class)
 class CompanyServiceTest {
 
-    @InjectMocks
-    private CompanyService companyService;
+        @InjectMocks
+        private CompanyService companyService;
 
-    @Mock
-    private CompanyRepository companyRepository;
+        @Mock
+        private CompanyRepository companyRepository;
 
-    @Test
-    void shouldCreateCompanyWithValidData() {
-        Company company = createCompany();
-        when(companyRepository.findByCnpj(CREATE_COMPANY_REQUEST.cnpj()))
-                .thenReturn(Optional.empty());
+        @Test
+        void shouldCreateCompanyWithValidData() {
+                Company company = createCompany();
 
-        when(companyRepository.save(any(Company.class)))
-                .thenReturn(company);
+                when(companyRepository.findByCnpj(Cnpj.of(CREATE_COMPANY_REQUEST.cnpj())))
+                                .thenReturn(Optional.empty());
 
-        CompanyResponse response = companyService.createCompany(CREATE_COMPANY_REQUEST);
+                when(companyRepository.save(any(Company.class)))
+                                .thenReturn(company);
 
-        assertThat(response).isNotNull();
-        assertThat(response.cnpj()).isEqualTo(CREATE_COMPANY_REQUEST.cnpj());
-        assertThat(response.name()).isEqualTo(CREATE_COMPANY_REQUEST.name());
-        assertThat(response.registrationStatus()).isEqualTo(CREATE_COMPANY_REQUEST.registrationStatus());
-        assertThat(response.postalCode()).isEqualTo(CREATE_COMPANY_REQUEST.postalCode());
-    }
+                CompanyResponse response = companyService.createCompany(CREATE_COMPANY_REQUEST);
 
-    @Test
-    void shouldThrowBusinessExceptionWhenCompanyAlreadyExistsWithCnpj() {
-        when(companyRepository.findByCnpj(CREATE_COMPANY_REQUEST.cnpj()))
-                .thenReturn(Optional.of(createCompany()));
+                assertThat(response).isNotNull();
+                assertThat(response.cnpj()).isEqualTo(CREATE_COMPANY_REQUEST.cnpj());
+                assertThat(response.name()).isEqualTo(CREATE_COMPANY_REQUEST.name());
+                assertThat(response.registrationStatus()).isEqualTo(CREATE_COMPANY_REQUEST.registrationStatus());
+                assertThat(response.postalCode()).isEqualTo(CREATE_COMPANY_REQUEST.postalCode());
+        }
 
-        assertThatThrownBy(() -> companyService.createCompany(CREATE_COMPANY_REQUEST))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage("Company already exists with this CNPJ");
-    }
+        @Test
+        void shouldThrowBusinessExceptionWhenCompanyAlreadyExistsWithCnpj() {
+                when(companyRepository.findByCnpj(Cnpj.of(CREATE_COMPANY_REQUEST.cnpj())))
+                                .thenReturn(Optional.of(createCompany()));
 
-    @Test
-    void shouldGetCompanyByIdWhenCompanyExists() {
-        when(companyRepository.findById(COMPANY_ID))
-                .thenReturn(Optional.of(createCompany()));
+                assertThatThrownBy(() -> companyService.createCompany(CREATE_COMPANY_REQUEST))
+                                .isInstanceOf(BusinessException.class)
+                                .hasMessage("Company already exists with this CNPJ");
+        }
 
-        CompanyResponse response = companyService.getCompanyById(COMPANY_ID);
+        @Test
+        void shouldGetCompanyByIdWhenCompanyExists() {
+                when(companyRepository.findById(COMPANY_ID))
+                                .thenReturn(Optional.of(createCompany()));
 
-        assertThat(response).isNotNull();
-        assertThat(response.cnpj()).isEqualTo(createCompany().getCnpj());
-        assertThat(response.name()).isEqualTo(createCompany().getName());
-        assertThat(response.registrationStatus()).isEqualTo(createCompany().getRegistrationStatus());
-    }
+                CompanyResponse response = companyService.getCompanyById(COMPANY_ID);
 
-    @Test
-    void shouldThrowResourceNotFoundExceptionWhenCompanyDoesNotExistById() {
-        when(companyRepository.findById(COMPANY_ID))
-                .thenReturn(Optional.empty());
+                assertThat(response).isNotNull();
+                assertThat(response.cnpj()).isEqualTo(createCompany().getCnpj().value());
+                assertThat(response.name()).isEqualTo(createCompany().getName());
+                assertThat(response.registrationStatus()).isEqualTo(createCompany().getRegistrationStatus());
+        }
 
-        assertThatThrownBy(() -> companyService.getCompanyById(COMPANY_ID))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Company not found");
+        @Test
+        void shouldThrowResourceNotFoundExceptionWhenCompanyDoesNotExistById() {
+                when(companyRepository.findById(COMPANY_ID))
+                                .thenReturn(Optional.empty());
 
-    }
+                assertThatThrownBy(() -> companyService.getCompanyById(COMPANY_ID))
+                                .isInstanceOf(ResourceNotFoundException.class)
+                                .hasMessage("Company not found");
+        }
 
-    @Test
-    void shouldUpdateCompanyWithValidData() {
-        when(companyRepository.findById(COMPANY_ID))
-                .thenReturn(Optional.of(createCompany()));
+        @Test
+        void shouldUpdateCompanyWithValidData() {
+                when(companyRepository.findById(COMPANY_ID))
+                                .thenReturn(Optional.of(createCompany()));
 
-        when(companyRepository.save(any(Company.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                when(companyRepository.save(any(Company.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        CompanyResponse response = companyService.updateCompany(COMPANY_ID, UPDATE_COMPANY_REQUEST);
+                CompanyResponse response = companyService.updateCompany(COMPANY_ID, UPDATE_COMPANY_REQUEST);
 
-        assertThat(response).isNotNull();
-        assertThat(response.name()).isEqualTo(UPDATE_COMPANY_REQUEST.name());
-        assertThat(response.registrationStatus()).isEqualTo(UPDATE_COMPANY_REQUEST.registrationStatus());
-        assertThat(response.postalCode()).isEqualTo(UPDATE_COMPANY_REQUEST.postalCode());
-        assertThat(response.city()).isEqualTo(UPDATE_COMPANY_REQUEST.city());
-        assertThat(response.state()).isEqualTo(UPDATE_COMPANY_REQUEST.state());
-        assertThat(response.foundedAt()).isEqualTo(UPDATE_COMPANY_REQUEST.foundedAt());
-    }
+                assertThat(response).isNotNull();
+                assertThat(response.name()).isEqualTo(UPDATE_COMPANY_REQUEST.name());
+                assertThat(response.registrationStatus()).isEqualTo(UPDATE_COMPANY_REQUEST.registrationStatus());
+                assertThat(response.postalCode()).isEqualTo(UPDATE_COMPANY_REQUEST.postalCode());
+                assertThat(response.city()).isEqualTo(UPDATE_COMPANY_REQUEST.city());
+                assertThat(response.state()).isEqualTo(UPDATE_COMPANY_REQUEST.state());
+                assertThat(response.foundedAt()).isEqualTo(UPDATE_COMPANY_REQUEST.foundedAt());
+        }
 
-    @Test
-    void shouldThrowResourceNotFoundExceptionWhenUpdatingNonExistingCompany() {
-        when(companyRepository.findById(COMPANY_ID))
-                .thenReturn(Optional.empty());
+        @Test
+        void shouldThrowResourceNotFoundExceptionWhenUpdatingNonExistingCompany() {
+                when(companyRepository.findById(COMPANY_ID))
+                                .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> companyService.updateCompany(COMPANY_ID, UPDATE_COMPANY_REQUEST))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Company not found");
-    }
+                assertThatThrownBy(() -> companyService.updateCompany(COMPANY_ID, UPDATE_COMPANY_REQUEST))
+                                .isInstanceOf(ResourceNotFoundException.class)
+                                .hasMessage("Company not found");
+        }
 }

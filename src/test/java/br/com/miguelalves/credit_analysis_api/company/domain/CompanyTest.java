@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
 
 public class CompanyTest {
+
     @Test
     void shouldCreateCompanyWithValidData() {
         Company company = Company.create(
@@ -19,10 +20,10 @@ public class CompanyTest {
                 LocalDate.now().minusYears(2));
 
         assertThat(company.getId()).isNotNull();
-        assertThat(company.getCnpj()).isEqualTo("12345678000195");
+        assertThat(company.getCnpj().value()).isEqualTo("12345678000195");
         assertThat(company.getName()).isEqualTo("Empresa XPTO");
         assertThat(company.getRegistrationStatus()).isEqualTo(RegistrationStatus.ACTIVE);
-        assertThat(company.getPostalCode()).isEqualTo("58400000");
+        assertThat(company.getPostalCode().value()).isEqualTo("58400000");
         assertThat(company.getCity()).isEqualTo("Campina Grande");
         assertThat(company.getState()).isEqualTo("PB");
         assertThat(company.getFoundedAt()).isEqualTo(LocalDate.now().minusYears(2));
@@ -170,7 +171,7 @@ public class CompanyTest {
 
         assertThat(company.getName()).isEqualTo("Empresa Atualizada");
         assertThat(company.getRegistrationStatus()).isEqualTo(RegistrationStatus.SUSPENDED);
-        assertThat(company.getPostalCode()).isEqualTo("58000000");
+        assertThat(company.getPostalCode().value()).isEqualTo("58000000");
         assertThat(company.getCity()).isEqualTo("João Pessoa");
         assertThat(company.getState()).isEqualTo("PB");
         assertThat(company.getFoundedAt()).isEqualTo(LocalDate.now().minusYears(3));

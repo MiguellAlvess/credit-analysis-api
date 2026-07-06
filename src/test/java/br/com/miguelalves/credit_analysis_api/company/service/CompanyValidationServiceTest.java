@@ -23,71 +23,78 @@ import br.com.miguelalves.credit_analysis_api.integration.exception.BrasilApiExc
 @ExtendWith(MockitoExtension.class)
 class CompanyValidationServiceTest {
 
-    @InjectMocks
-    private CompanyValidationService companyValidationService;
+        @InjectMocks
+        private CompanyValidationService companyValidationService;
 
-    @Mock
-    private BrasilApiClient brasilApiClient;
+        @Mock
+        private BrasilApiClient brasilApiClient;
 
-    @Mock
-    private CompanyRepository companyRepository;
+        @Mock
+        private CompanyRepository companyRepository;
 
-    @Test
-    void shouldValidateCompanyAndUpdateRegistrationDataWhenBrasilApiReturnsActiveCompany() {
-        Company company = createCompany();
+        @Test
+        void shouldValidateCompanyAndUpdateRegistrationDataWhenBrasilApiReturnsActiveCompany() {
+                Company company = createCompany();
 
-        when(brasilApiClient.findCompanyByCnpj(company.getCnpj()))
-                .thenReturn(BRASIL_API_ACTIVE_COMPANY_RESPONSE);
-        when(companyRepository.save(any(Company.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-        Company validatedCompany = companyValidationService.validateCompany(company);
+                when(brasilApiClient.findCompanyByCnpj(company.getCnpj().value()))
+                                .thenReturn(BRASIL_API_ACTIVE_COMPANY_RESPONSE);
 
-        assertThat(validatedCompany).isNotNull();
-        assertThat(validatedCompany.getName()).isEqualTo(BRASIL_API_ACTIVE_COMPANY_RESPONSE.razao_social());
-        assertThat(validatedCompany.getRegistrationStatus()).isEqualTo(RegistrationStatus.ACTIVE);
-        assertThat(validatedCompany.getPostalCode()).isEqualTo(BRASIL_API_ACTIVE_COMPANY_RESPONSE.cep());
-        assertThat(validatedCompany.getCity()).isEqualTo(BRASIL_API_ACTIVE_COMPANY_RESPONSE.municipio());
-        assertThat(validatedCompany.getState()).isEqualTo(BRASIL_API_ACTIVE_COMPANY_RESPONSE.uf());
-        assertThat(validatedCompany.getFoundedAt())
-                .isEqualTo(BRASIL_API_ACTIVE_COMPANY_RESPONSE.data_inicio_atividade());
-    }
+                when(companyRepository.save(any(Company.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
 
-    @Test
-    void shouldMapSuspendedStatusWhenBrasilApiReturnsSuspendedCompany() {
-        Company company = createCompany();
+                Company validatedCompany = companyValidationService.validateCompany(company);
 
-        when(brasilApiClient.findCompanyByCnpj(company.getCnpj()))
-                .thenReturn(BRASIL_API_SUSPENDED_COMPANY_RESPONSE);
-        when(companyRepository.save(any(Company.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-        Company validatedCompany = companyValidationService.validateCompany(company);
+                assertThat(validatedCompany).isNotNull();
+                assertThat(validatedCompany.getName()).isEqualTo(BRASIL_API_ACTIVE_COMPANY_RESPONSE.razao_social());
+                assertThat(validatedCompany.getRegistrationStatus()).isEqualTo(RegistrationStatus.ACTIVE);
+                assertThat(validatedCompany.getPostalCode().value())
+                                .isEqualTo(BRASIL_API_ACTIVE_COMPANY_RESPONSE.cep());
+                assertThat(validatedCompany.getCity()).isEqualTo(BRASIL_API_ACTIVE_COMPANY_RESPONSE.municipio());
+                assertThat(validatedCompany.getState()).isEqualTo(BRASIL_API_ACTIVE_COMPANY_RESPONSE.uf());
+                assertThat(validatedCompany.getFoundedAt())
+                                .isEqualTo(BRASIL_API_ACTIVE_COMPANY_RESPONSE.data_inicio_atividade());
+        }
 
-        assertThat(validatedCompany.getRegistrationStatus()).isEqualTo(RegistrationStatus.SUSPENDED);
-    }
+        @Test
+        void shouldMapSuspendedStatusWhenBrasilApiReturnsSuspendedCompany() {
+                Company company = createCompany();
 
-    @Test
-    void shouldMapClosedStatusWhenBrasilApiReturnsClosedCompany() {
-        Company company = createCompany();
+                when(brasilApiClient.findCompanyByCnpj(company.getCnpj().value()))
+                                .thenReturn(BRASIL_API_SUSPENDED_COMPANY_RESPONSE);
 
-        when(brasilApiClient.findCompanyByCnpj(company.getCnpj()))
-                .thenReturn(BRASIL_API_CLOSED_COMPANY_RESPONSE);
-        when(companyRepository.save(any(Company.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-        Company validatedCompany = companyValidationService.validateCompany(company);
+                when(companyRepository.save(any(Company.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertThat(validatedCompany.getRegistrationStatus()).isEqualTo(RegistrationStatus.CLOSED);
-    }
+                Company validatedCompany = companyValidationService.validateCompany(company);
 
-    @Test
-    void shouldThrowBrasilApiExceptionWhenBrasilApiClientFails() {
-        Company company = createCompany();
+                assertThat(validatedCompany.getRegistrationStatus()).isEqualTo(RegistrationStatus.SUSPENDED);
+        }
 
-        when(brasilApiClient.findCompanyByCnpj(company.getCnpj()))
-                .thenThrow(new BrasilApiException("Error while consulting BrasilAPI", new RuntimeException()));
+        @Test
+        void shouldMapClosedStatusWhenBrasilApiReturnsClosedCompany() {
+                Company company = createCompany();
 
-        assertThatThrownBy(() -> companyValidationService.validateCompany(company))
-                .isInstanceOf(BrasilApiException.class)
-                .hasMessage("Error while consulting BrasilAPI");
-    }
+                when(brasilApiClient.findCompanyByCnpj(company.getCnpj().value()))
+                                .thenReturn(BRASIL_API_CLOSED_COMPANY_RESPONSE);
 
+                when(companyRepository.save(any(Company.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
+
+                Company validatedCompany = companyValidationService.validateCompany(company);
+
+                assertThat(validatedCompany.getRegistrationStatus()).isEqualTo(RegistrationStatus.CLOSED);
+        }
+
+        @Test
+        void shouldThrowBrasilApiExceptionWhenBrasilApiClientFails() {
+                Company company = createCompany();
+
+                when(brasilApiClient.findCompanyByCnpj(company.getCnpj().value()))
+                                .thenThrow(new BrasilApiException("Error while consulting BrasilAPI",
+                                                new RuntimeException()));
+
+                assertThatThrownBy(() -> companyValidationService.validateCompany(company))
+                                .isInstanceOf(BrasilApiException.class)
+                                .hasMessage("Error while consulting BrasilAPI");
+        }
 }

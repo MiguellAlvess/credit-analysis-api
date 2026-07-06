@@ -1,10 +1,12 @@
 package br.com.miguelalves.credit_analysis_api.company.common;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import br.com.miguelalves.credit_analysis_api.company.domain.Company;
 import br.com.miguelalves.credit_analysis_api.company.domain.RegistrationStatus;
+import br.com.miguelalves.credit_analysis_api.company.dto.CompanyResponse;
 import br.com.miguelalves.credit_analysis_api.company.dto.CreateCompanyRequest;
 import br.com.miguelalves.credit_analysis_api.company.dto.UpdateCompanyRequest;
 import br.com.miguelalves.credit_analysis_api.integration.dto.BrasilApiCompanyResponse;
@@ -39,6 +41,20 @@ public class CompanyConstants {
                                 "Campina Grande",
                                 "PB",
                                 LocalDate.of(2018, 1, 1));
+        }
+
+        public static CompanyResponse createCompanyResponse() {
+                return new CompanyResponse(
+                                COMPANY_ID,
+                                CREATE_COMPANY_REQUEST.cnpj(),
+                                CREATE_COMPANY_REQUEST.name(),
+                                CREATE_COMPANY_REQUEST.registrationStatus(),
+                                CREATE_COMPANY_REQUEST.postalCode(),
+                                CREATE_COMPANY_REQUEST.city(),
+                                CREATE_COMPANY_REQUEST.state(),
+                                CREATE_COMPANY_REQUEST.foundedAt(),
+                                LocalDateTime.now(),
+                                LocalDateTime.now());
         }
 
         public static final BrasilApiCompanyResponse BRASIL_API_ACTIVE_COMPANY_RESPONSE = new BrasilApiCompanyResponse(

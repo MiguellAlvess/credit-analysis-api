@@ -10,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import static br.com.miguelalves.credit_analysis_api.company.common.CompanyConstants.createCompany;
+import br.com.miguelalves.credit_analysis_api.company.domain.Cnpj;
 import br.com.miguelalves.credit_analysis_api.company.domain.Company;
 
 @DataJpaTest
@@ -53,7 +54,7 @@ class CompanyRepositoryTest {
 
     @Test
     void shouldReturnEmptyWhenCompanyDoesNotExistByCnpj() {
-        Optional<Company> foundCompany = companyRepository.findByCnpj("00000000000000");
+        Optional<Company> foundCompany = companyRepository.findByCnpj(Cnpj.of("00000000000000"));
 
         assertThat(foundCompany).isEmpty();
     }

@@ -11,10 +11,10 @@ public class CompanyMapper {
     public static CompanyResponse fromCompanyToResponse(Company company) {
         return new CompanyResponse(
                 company.getId(),
-                company.getCnpj(),
+                company.getCnpj().value(),
                 company.getName(),
                 company.getRegistrationStatus(),
-                company.getPostalCode(),
+                company.getPostalCode().value(),
                 company.getCity(),
                 company.getState(),
                 company.getFoundedAt(),

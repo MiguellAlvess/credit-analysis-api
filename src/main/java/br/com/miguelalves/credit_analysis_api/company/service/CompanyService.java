@@ -1,5 +1,11 @@
 package br.com.miguelalves.credit_analysis_api.company.service;
 
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import br.com.miguelalves.credit_analysis_api.company.domain.Cnpj;
 import br.com.miguelalves.credit_analysis_api.company.domain.Company;
 import br.com.miguelalves.credit_analysis_api.company.dto.CompanyResponse;
 import br.com.miguelalves.credit_analysis_api.company.dto.CreateCompanyRequest;
@@ -9,10 +15,6 @@ import br.com.miguelalves.credit_analysis_api.company.repository.CompanyReposito
 import br.com.miguelalves.credit_analysis_api.shared.exception.validation.BusinessException;
 import br.com.miguelalves.credit_analysis_api.shared.exception.validation.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +24,7 @@ public class CompanyService {
 
     @Transactional
     public CompanyResponse createCompany(CreateCompanyRequest request) {
-        if (companyRepository.findByCnpj(request.cnpj()).isPresent()) {
+        if (companyRepository.findByCnpj(Cnpj.of(request.cnpj())).isPresent()) {
             throw new BusinessException("Company already exists with this CNPJ");
         }
         Company company = Company.create(
@@ -46,7 +48,6 @@ public class CompanyService {
     @Transactional
     public CompanyResponse updateCompany(UUID id, UpdateCompanyRequest request) {
         Company company = findCompanyById(id);
-
         company.updateRegistrationData(
                 request.name(),
                 request.registrationStatus(),
@@ -54,9 +55,7 @@ public class CompanyService {
                 request.city(),
                 request.state(),
                 request.foundedAt());
-
         Company updatedCompany = companyRepository.save(company);
-
         return CompanyMapper.fromCompanyToResponse(updatedCompany);
     }
 

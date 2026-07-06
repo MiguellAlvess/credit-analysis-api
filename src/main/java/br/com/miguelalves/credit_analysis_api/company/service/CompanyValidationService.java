@@ -19,7 +19,7 @@ public class CompanyValidationService {
 
     @Transactional
     public Company validateCompany(Company company) {
-        BrasilApiCompanyResponse response = brasilApiClient.findCompanyByCnpj(company.getCnpj());
+        BrasilApiCompanyResponse response = brasilApiClient.findCompanyByCnpj(company.getCnpj().value());
         RegistrationStatus registrationStatus = RegistrationStatus.fromBrasilApi(
                 response.descricao_situacao_cadastral());
         company.updateRegistrationData(

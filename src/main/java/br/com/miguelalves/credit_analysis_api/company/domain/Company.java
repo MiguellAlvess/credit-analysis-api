@@ -5,7 +5,9 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.UUID;
 
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -21,8 +23,9 @@ public class Company {
     @Id
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 14)
-    private String cnpj;
+    @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "cnpj", nullable = false, unique = true, length = 14))
+    private Cnpj cnpj;
 
     @Column(nullable = false)
     private String name;
@@ -31,8 +34,9 @@ public class Company {
     @Column(name = "registration_status", nullable = false)
     private RegistrationStatus registrationStatus;
 
-    @Column(name = "postal_code", nullable = false, length = 8)
-    private String postalCode;
+    @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "postal_code", nullable = false, length = 8))
+    private PostalCode postalCode;
 
     private String city;
 
@@ -59,10 +63,10 @@ public class Company {
             String state,
             LocalDate foundedAt) {
         this.id = UUID.randomUUID();
-        this.cnpj = normalizeCnpj(cnpj);
+        this.cnpj = Cnpj.of(cnpj);
         this.name = validateName(name);
         this.registrationStatus = registrationStatus;
-        this.postalCode = normalizePostalCode(postalCode);
+        this.postalCode = PostalCode.of(postalCode);
         this.city = city;
         this.state = state;
         this.foundedAt = foundedAt;
@@ -90,7 +94,7 @@ public class Company {
             LocalDate foundedAt) {
         this.name = validateName(name);
         this.registrationStatus = registrationStatus;
-        this.postalCode = normalizePostalCode(postalCode);
+        this.postalCode = PostalCode.of(postalCode);
         this.city = city;
         this.state = state;
         this.foundedAt = foundedAt;
@@ -116,31 +120,7 @@ public class Company {
         if (this.foundedAt == null) {
             return false;
         }
-
         return Period.between(this.foundedAt, LocalDate.now()).getYears() > 5;
-    }
-
-    private String normalizeCnpj(String cnpj) {
-        if (cnpj == null || cnpj.isBlank()) {
-            throw new IllegalArgumentException("CNPJ is required");
-        }
-        String normalized = cnpj.replaceAll("\\D", "");
-        if (normalized.length() != 14) {
-            throw new IllegalArgumentException("CNPJ must have 14 digits");
-        }
-        return normalized;
-    }
-
-    private String normalizePostalCode(String postalCode) {
-        if (postalCode == null || postalCode.isBlank()) {
-            throw new IllegalArgumentException("Postal code is required");
-        }
-        String normalized = postalCode.replaceAll("\\D", "");
-
-        if (normalized.length() != 8) {
-            throw new IllegalArgumentException("Postal code must have 8 digits");
-        }
-        return normalized;
     }
 
     private String validateName(String name) {

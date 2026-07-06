@@ -121,15 +121,15 @@ class CreditRequestServiceTest {
         @Test
         void shouldGetCreditRequestByIdWhenCreditRequestExists() {
                 CreditRequest creditRequest = createCreditRequest();
+
                 when(creditRequestRepository.findById(CREDIT_REQUEST_ID))
                                 .thenReturn(Optional.of(creditRequest));
 
                 CreditRequestResponse response = creditRequestService.getCreditRequestById(CREDIT_REQUEST_ID);
 
-                assertThat(response).isNotNull();
                 assertThat(response.companyId()).isEqualTo(creditRequest.getCompany().getId());
                 assertThat(response.companyName()).isEqualTo(creditRequest.getCompany().getName());
-                assertThat(response.cnpj()).isEqualTo(creditRequest.getCompany().getCnpj());
+                assertThat(response.cnpj()).isEqualTo(creditRequest.getCompany().getCnpj().value());
                 assertThat(response.requestedAmount()).isEqualByComparingTo(creditRequest.getRequestedAmount());
                 assertThat(response.annualRevenue()).isEqualByComparingTo(creditRequest.getAnnualRevenue());
                 assertThat(response.status()).isEqualTo(creditRequest.getStatus());

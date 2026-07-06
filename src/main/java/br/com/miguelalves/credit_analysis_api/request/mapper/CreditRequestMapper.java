@@ -13,7 +13,7 @@ public class CreditRequestMapper {
                 creditRequest.getId(),
                 creditRequest.getCompany().getId(),
                 creditRequest.getCompany().getName(),
-                creditRequest.getCompany().getCnpj(),
+                creditRequest.getCompany().getCnpj().value(),
                 creditRequest.getRequestedAmount(),
                 creditRequest.getAnnualRevenue(),
                 creditRequest.getScore(),

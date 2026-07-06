@@ -19,7 +19,7 @@ public class CreditDecisionProducer {
         CreditDecisionEvent event = new CreditDecisionEvent(
                 decision.getCreditRequest().getId(),
                 decision.getCreditRequest().getCompany().getName(),
-                decision.getCreditRequest().getCompany().getCnpj(),
+                decision.getCreditRequest().getCompany().getCnpj().value(),
                 decision.getDecision(),
                 decision.getApprovedAmount(),
                 decision.getReason(),

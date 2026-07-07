@@ -6,7 +6,7 @@ O sistema realiza todo o fluxo de análise de crédito de uma empresa, desde a v
 
 ## Arquitetura Geral
 
-<img width="1158" height="627" alt="image" src="https://github.com/user-attachments/assets/b283c75c-63f6-451c-a367-e5db7e8fd9fb" />
+<img width="912" height="500" alt="image" src="https://github.com/user-attachments/assets/0bc21362-a841-433e-b693-6c4af22a25e7" />
 
 O fluxo principal da aplicação permanece síncrono, enquanto o envio de notificações é desacoplado utilizando Apache Kafka.
 
